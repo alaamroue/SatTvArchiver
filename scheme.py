@@ -15,12 +15,16 @@ scheme_enc_list = {
 
 # Dictionary to track which scheme each channel uses
 channel_schemes = {
-    "nbn":          "embed_result_74.php",
+    "aljadeed":     "watchtv.php",
     "mtv_lebanon":  "watchtv.php",
-    "aljadeed":     "embed_result_74.php",
-    "otv_lb1":      "watchtv.php",
+    "lbc_1":        "embed_result_74.php",
+    "otv_lb1":      "embed_result_74.php",
+    "nbn":          "embed_result_74.php",
+#   "manartv1":     "embed_result_74.php",
+#   "alittihad":    "embed_result_74.php",
     "almayadeen1":  "embed_result_74.php",
-    "teleliban":    "embed_result_74.php"
+    "teleliban":    "embed_result_74.php",
+#    "aljazeer_ar1": "embed_result_74.php"
 }
 
 # Class to manage scheme related things such as using encryption or what lookup values to use
@@ -51,7 +55,10 @@ class Scheme:
         return aesKey
 
     def getIndexFatherUrl(self):
-        if self.encrypt == False:
+        if self.schemeId == "embed_result_74.php?id":
+            return "https://elahmad.com/tv/watchtv.php?id=" + self.ChannelId
+
+        if self.encrypt == False :
             return "https://www.elahmad.com/tv/result/embed_result_74.php"
         else:
             return "https://elahmad.com/tv/watchtv.php"

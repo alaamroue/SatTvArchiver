@@ -34,7 +34,9 @@ def createOutDir(outputPath):
 # Extract filename from string url
 def extractFileName(channelId, url):
     #Remove get data from url
-    url = url[:url.rfind("?")]
+    getDataIndex = url.rfind("?")
+    if getDataIndex != -1:
+        url = url[:getDataIndex]
     #Leave only last 6 slash and replace them with _
     if "smil:" in url:
         url = url[url.rfind("/")+1:]

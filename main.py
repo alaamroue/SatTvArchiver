@@ -1,6 +1,8 @@
 from helpers import *
+from scheme import channel_schemes
 from surf_manager import SurfManager
 from chunk_manager import *
+from transcribe_model import TranscribeModel
 
 import argparse
 import time
@@ -11,8 +13,8 @@ def main():
     parser = argparse.ArgumentParser(description='Download a stream of a TV channel from the elahmad.com website. The script can also transcribed and compress the stream for archival purposes.')
     parser.formatter_class = lambda prog: argparse.RawTextHelpFormatter(prog, max_help_position=25)
 
-    channel_ids = ['nbn', 'mtv_lebanon', 'aljadeed', 'lbc_1', 'otv_lb1', 'lbc', 'manartv1', 'almayadeen1', 'teleliban']
-    
+    channel_ids = list(channel_schemes.keys())
+
     requiredNamed = parser.add_argument_group('Required Arguments')
     requiredNamed.add_argument('-i', '--channel', choices=channel_ids, required=True, help='Specify the channel id to stream. Allowed values are '+', '.join(channel_ids), metavar='')
     
@@ -28,15 +30,21 @@ def main():
     channelId = args.channel
     options = {
         'combineActive': args.combine,     
-        'transcribeActive': args.transcribe, #
-        'convertActive': args.compress,    #
-        'outputPath': args.output,    #
-        'combineEvery': args.combine_every,         #
+        'transcribeActive': args.transcribe,
+        'convertActive': args.compress,
+        'outputPath': args.output,
+        'combineEvery': args.combine_every,
+        'whisperModelSize': "small",
+        'whisperLang': "ar",
+        'whisperDevice': "cuda",
+        'vtt-output': False
     }
-
     # Initializations
     LastChunkDownloaded = ""
     savedChunksList = []
+
+    # Setting up the Transcriber
+    myTranscriber = TranscribeModel(options)
 
     # Setting up the surf Manager
     mySurfManager = SurfManager(channelId)
@@ -44,6 +52,7 @@ def main():
 
     # Main script loop where the refresh takes place
     print("[INFO] Main Loop Started...")
+    batchNo = 0
     while(True):
 
         #Grab links to newest video chunk
@@ -54,12 +63,17 @@ def main():
         if (latestChunk != LastChunkDownloaded):
             #create a thread and download in it
             savedChunksList.append(latestChunk)
-            threading.Thread(target=manageChunksThread, args=(savedChunksList,mySurfManager,options,), name='manageChunksThread').start()
+            threading.Thread(target=manageChunksThread, args=(savedChunksList,mySurfManager,myTranscriber,options,batchNo,), name='manageChunksThread').start()
             LastChunkDownloaded = latestChunk 
             
         # Combine clips and convert to mp4 and use speech recognition
-        if (len(savedChunksList)%options['combineEvery'] == 0 and len(savedChunksList) != 0)  or options['combineActive'] == False :
+        if (len(savedChunksList)%options['combineEvery'] == 0 and len(savedChunksList) != 0):
             savedChunksList=[]
+            batchNo = batchNo + 1
+        
+        if options['combineActive'] == False:
+            savedChunksList=[]
+            batchNo = 0
 
         time.sleep(0.5)
 

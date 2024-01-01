@@ -85,7 +85,10 @@ class SurfManager:
             self.getReqsParams()
         else:
             print("[INFO]: Scheme is not encrypted... ")
-            self.requestParams = { "id" : self.channel.id}
+            if self.channel.id == "aljadeed":
+                self.getReqsParams()
+            else:
+                self.requestParams = { "id" : self.channel.id}
             
         self.indexFile = self.getIndexFile()
         self.baseUrl = self.indexFile[:self.indexFile.rfind("/")+1]
